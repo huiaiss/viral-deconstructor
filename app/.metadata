@@ -1,0 +1,20 @@
+# This file tracks properties of this Flutter project.
+# Used by Flutter tool to assess capabilities and perform upgrades etc.
+#
+# This file should be version controlled and should not be manually edited.
+
+version:
+  revision: "a0f6cb9b22cc3218ee684c72b1fbd64db3496af6"
+  channel: "stable"
+
+project_type: app
+
+# Tracks metadata for the flutter migrate command
+migration:
+  platforms:
+    - platform: android
+      created_date: 2026-05-14T20:56:00.000000Z
+    - platform: ios
+      created_date: 2026-05-14T20:56:00.000000Z
+  user_version: 3.38.9
+  created_by: flutter create
