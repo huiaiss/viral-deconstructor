@@ -1,20 +1,28 @@
 const config = require('../config');
 const fs = require('fs');
 
-async function transcribe(audioFilePath) {
-  const form = new FormData();
-  form.append('file', fs.createReadStream(audioFilePath));
-  form.append('model', 'whisper-1');
-  form.append('response_format', 'verbose_json');
-  form.append('timestamp_granularities', 'word');
+const BASE_URL = config.ai.doubaoBaseUrl;
+const KEY = config.ai.doubaoKey;
 
-  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+async function transcribe(audioFilePath) {
+  const audioBuffer = fs.readFileSync(audioFilePath);
+  const audioBase64 = audioBuffer.toString('base64');
+
+  const res = await fetch(`${BASE_URL}/audio/transcriptions`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${config.ai.openaiKey}` },
-    body: form,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'doubao-whisper',
+      file: audioBase64,
+      response_format: 'verbose_json',
+      timestamp_granularities: ['word'],
+    }),
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(`Whisper error: ${JSON.stringify(json)}`);
+  if (!res.ok) throw new Error(`豆包语音识别错误: ${JSON.stringify(json)}`);
   return json;
 }
 

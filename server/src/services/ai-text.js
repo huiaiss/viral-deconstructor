@@ -1,24 +1,28 @@
 const config = require('../config');
 
-async function claudeChat(systemPrompt, userMessage) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+const DOUBAO_URL = `${config.ai.doubaoBaseUrl}/chat/completions`;
+const DOUBAO_KEY = config.ai.doubaoKey;
+
+async function doubaoChat(systemPrompt, userMessage) {
+  const res = await fetch(DOUBAO_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': config.ai.claudeKey,
-      'anthropic-version': '2023-06-01',
+      'Authorization': `Bearer ${DOUBAO_KEY}`,
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 8192,
+      model: 'doubao-pro-32k',
       temperature: 0.4,
-      system: systemPrompt,
-      messages: [{ role: 'user', content: userMessage }],
+      max_tokens: 8192,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
     }),
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(`Claude API error: ${JSON.stringify(json)}`);
-  return json.content[0].text;
+  if (!res.ok) throw new Error(`豆包 API 错误: ${JSON.stringify(json)}`);
+  return json.choices[0].message.content;
 }
 
 async function deepseekChat(systemPrompt, userMessage) {
@@ -39,14 +43,15 @@ async function deepseekChat(systemPrompt, userMessage) {
     }),
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(`DeepSeek API error: ${JSON.stringify(json)}`);
+  if (!res.ok) throw new Error(`DeepSeek API 错误: ${JSON.stringify(json)}`);
   return json.choices[0].message.content;
 }
 
+// 豆包优先，DeepSeek 作为 fallback
 async function chat(systemPrompt, userMessage) {
-  try { return await claudeChat(systemPrompt, userMessage); }
-  catch (e) { console.warn('Claude failed, falling back to DeepSeek:', e.message); }
+  try { return await doubaoChat(systemPrompt, userMessage); }
+  catch (e) { console.warn('豆包失败，回退 DeepSeek:', e.message); }
   return deepseekChat(systemPrompt, userMessage);
 }
 
-module.exports = { chat, claudeChat, deepseekChat };
+module.exports = { chat, doubaoChat, deepseekChat };

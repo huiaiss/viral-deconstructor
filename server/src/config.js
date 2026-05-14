@@ -19,10 +19,9 @@ module.exports = {
     bucket: process.env.S3_BUCKET,
   },
   ai: {
-    geminiKey: process.env.GEMINI_API_KEY,
-    claudeKey: process.env.CLAUDE_API_KEY,
+    doubaoKey: process.env.DOUBAO_API_KEY,
+    doubaoBaseUrl: process.env.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3',
     deepseekKey: process.env.DEEPSEEK_API_KEY,
-    openaiKey: process.env.OPENAI_API_KEY,
   },
   freeLimit: 3,
 };
