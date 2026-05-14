@@ -1,29 +1,44 @@
-const config = require('../config');
-const fs = require('fs');
+const { execFile } = require('child_process');
+const path = require('path');
+const { v4: uuid } = require('uuid');
 
-const BASE_URL = config.ai.doubaoBaseUrl;
-const KEY = config.ai.doubaoKey;
+const TMP = path.join(__dirname, '..', '..', 'tmp');
 
 async function transcribe(audioFilePath) {
-  const audioBuffer = fs.readFileSync(audioFilePath);
-  const audioBase64 = audioBuffer.toString('base64');
+  const subtitlePath = path.join(TMP, `${uuid()}.srt`);
+  const whisperModel = process.env.WHISPER_MODEL || 'medium';
 
-  const res = await fetch(`${BASE_URL}/audio/transcriptions`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${KEY}`,
-    },
-    body: JSON.stringify({
-      model: 'doubao-whisper',
-      file: audioBase64,
-      response_format: 'verbose_json',
-      timestamp_granularities: ['word'],
-    }),
+  return new Promise((resolve, reject) => {
+    execFile('whisper', [
+      audioFilePath,
+      '--model', whisperModel,
+      '--output_format', 'json',
+      '--output_dir', path.dirname(subtitlePath),
+      '--task', 'transcribe',
+      '--language', 'zh',
+    ], { timeout: 300000 }, (err, stdout) => {
+      if (err) {
+        console.error('Whisper error:', err.message);
+        return reject(new Error(`语音识别失败: ${err.message}。请确保已安装 openai-whisper (pip install openai-whisper)`));
+      }
+      try {
+        const jsonPath = audioFilePath.replace(/\.[^.]+$/, '.json');
+        const fs = require('fs');
+        const result = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+        resolve({
+          text: result.text,
+          segments: (result.segments || []).map(s => ({
+            start: s.start,
+            end: s.end,
+            text: s.text,
+            words: (s.words || []).map(w => ({ word: w.word, start: w.start, end: w.end })),
+          })),
+        });
+      } catch (e) {
+        reject(new Error(`解析语音识别结果失败: ${e.message}`));
+      }
+    });
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(`豆包语音识别错误: ${JSON.stringify(json)}`);
-  return json;
 }
 
 module.exports = { transcribe };

@@ -3,6 +3,7 @@ const fs = require('fs');
 
 const BASE_URL = config.ai.doubaoBaseUrl;
 const KEY = config.ai.doubaoKey;
+const MODEL = 'doubao-seed-1-6-vision-250815';
 
 async function analyzeFrames(framePaths, prompt) {
   const parts = [
@@ -20,7 +21,7 @@ async function analyzeFrames(framePaths, prompt) {
       'Authorization': `Bearer ${KEY}`,
     },
     body: JSON.stringify({
-      model: 'doubao-vision-pro-32k',
+      model: MODEL,
       temperature: 0.4,
       max_tokens: 8192,
       messages: [{ role: 'user', content: parts }],

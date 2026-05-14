@@ -2,6 +2,7 @@ const config = require('../config');
 
 const DOUBAO_URL = `${config.ai.doubaoBaseUrl}/chat/completions`;
 const DOUBAO_KEY = config.ai.doubaoKey;
+const DOUBAO_MODEL = 'doubao-seed-1-6-251015';
 
 async function doubaoChat(systemPrompt, userMessage) {
   const res = await fetch(DOUBAO_URL, {
@@ -11,7 +12,7 @@ async function doubaoChat(systemPrompt, userMessage) {
       'Authorization': `Bearer ${DOUBAO_KEY}`,
     },
     body: JSON.stringify({
-      model: 'doubao-pro-32k',
+      model: DOUBAO_MODEL,
       temperature: 0.4,
       max_tokens: 8192,
       messages: [
@@ -47,7 +48,7 @@ async function deepseekChat(systemPrompt, userMessage) {
   return json.choices[0].message.content;
 }
 
-// 豆包优先，DeepSeek 作为 fallback
+// 豆包优先，DeepSeek 回退
 async function chat(systemPrompt, userMessage) {
   try { return await doubaoChat(systemPrompt, userMessage); }
   catch (e) { console.warn('豆包失败，回退 DeepSeek:', e.message); }
